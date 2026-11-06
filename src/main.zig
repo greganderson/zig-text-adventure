@@ -2,6 +2,7 @@ const std = @import("std");
 const Console = @import("console.zig").Console;
 const Location = @import("location.zig").Location;
 const World = @import("world.zig").World;
+const Game = @import("game.zig").Game;
 
 pub fn main(init: std.process.Init) !void {
     var output_buffer: [1024]u8 = undefined;
@@ -16,8 +17,7 @@ pub fn main(init: std.process.Init) !void {
 
     const console = Console{ .stdout = stdout, .stdin = stdin };
 
-    var world: World = .init(arena, console);
-    defer world.deinit();
-
-    try world.loadWorld(init.io, "src/world.json");
+    const game: Game = try .init(arena, init.io, console);
+    try stdout.print("The player has {d} health.\n", .{game.world.player.?.health});
+    try stdout.flush();
 }

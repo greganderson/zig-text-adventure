@@ -1,15 +1,13 @@
-// Memory ownership for locations should live here
-// Also include a collection of all the locations so I can free each one exactly once in the deinit function
-// errdefer is a thing, use that when creating a new location. addLocation -> allocation the location, allocate the edges slice, add location to the collection of locations, then finally return. If any of those steps fail, release the memory.
-
 const std = @import("std");
 const Console = @import("console.zig").Console;
 const Location = @import("location.zig").Location;
+const Player = @import("player.zig").Player;
 
 pub const World = struct {
     allocator: std.mem.Allocator,
-    locations: std.ArrayList(*Location),
     console: Console,
+    locations: std.ArrayList(*Location),
+    player: ?Player = null,
 
     pub fn init(allocator: std.mem.Allocator, console: Console) World {
         return .{ .allocator = allocator, .locations = .empty, .console = console };
@@ -24,6 +22,11 @@ pub const World = struct {
         }
 
         self.locations.deinit(self.allocator);
+    }
+
+    pub fn initWorld(self: *World, io: std.Io, filepath: []const u8) !void {
+        try self.loadWorld(io, filepath);
+        self.player = .{ .currentLocation = self.locations.items[0] };
     }
 
     pub fn addLocation(self: *World, name: []const u8, description: []const u8) !void {
@@ -45,6 +48,7 @@ pub const World = struct {
         const fromLocation = self.getLocation(from) orelse return;
         const toLocation = self.getLocation(to) orelse return;
         try fromLocation.paths.append(self.allocator, toLocation);
+        try toLocation.paths.append(self.allocator, fromLocation);
     }
 
     fn getLocation(self: *const World, name: []const u8) ?*Location {
