@@ -1,0 +1,18 @@
+{
+  "locations": [
+    {
+      "name": "Meadow",
+      "description": "A peaceful field of grass and flowers."
+    },
+    {
+      "name": "Forest",
+      "description": "A dark, foreboding collection of tall trees."
+    }
+  ],
+  "paths": [
+    {
+      "from": "Meadow",
+      "to": "Forest"
+    }
+  ]
+}
