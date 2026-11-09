@@ -13,11 +13,18 @@ pub fn main(init: std.process.Init) !void {
     var stdin_file_reader: std.Io.File.Reader = .init(.stdin(), init.io, &input_buffer);
     const stdin = &stdin_file_reader.interface;
 
-    const arena: std.mem.Allocator = init.arena.allocator();
+    var allocator: std.heap.DebugAllocator(.{}) = .init;
+    defer {
+        const status = allocator.deinit();
+        if (status == .leak) {
+            std.debug.print("Memory leak detected.\n", .{});
+        }
+    }
 
     const console = Console{ .stdout = stdout, .stdin = stdin };
 
-    const game: Game = try .init(arena, init.io, console);
-    try stdout.print("The player has {d} health.\n", .{game.world.player.?.health});
-    try stdout.flush();
+    const game: Game = try .init(allocator.allocator(), init.io, console);
+    defer game.deinit();
+
+    try game.run();
 }

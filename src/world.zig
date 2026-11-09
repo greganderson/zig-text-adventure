@@ -7,26 +7,32 @@ pub const World = struct {
     allocator: std.mem.Allocator,
     console: Console,
     locations: std.ArrayList(*Location),
-    player: ?Player = null,
+    player: Player,
 
-    pub fn init(allocator: std.mem.Allocator, console: Console) World {
-        return .{ .allocator = allocator, .locations = .empty, .console = console };
+    pub fn init(allocator: std.mem.Allocator, console: Console) !World {
+        const raw_name = try console.getInput("Hello adventurer! Tell me your name so that I might properly address you: ", .{});
+        const name = try allocator.dupe(u8, raw_name);
+        const player: Player = .{ .name = name };
+
+        return .{ .allocator = allocator, .locations = .empty, .console = console, .player = player };
     }
 
     pub fn deinit(self: *World) void {
+        // Locations
         for (self.locations.items) |location| {
-            self.allocator.free(location.name);
-            self.allocator.free(location.description);
-            location.paths.deinit(self.allocator);
+            location.deinit(self.allocator);
             self.allocator.destroy(location);
         }
 
+        // Player
+        self.player.deinit(self.allocator);
+
+        // Self destruct
         self.locations.deinit(self.allocator);
     }
 
     pub fn initWorld(self: *World, io: std.Io, filepath: []const u8) !void {
         try self.loadWorld(io, filepath);
-        self.player = .{ .currentLocation = self.locations.items[0] };
     }
 
     pub fn addLocation(self: *World, name: []const u8, description: []const u8) !void {
