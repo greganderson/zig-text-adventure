@@ -1,7 +1,9 @@
 const std = @import("std");
 const Console = @import("console.zig").Console;
+const Color = @import("console.zig").Color;
 const Location = @import("location.zig").Location;
 const Player = @import("player.zig").Player;
+const startText = @import("title.zig").startText;
 
 pub const World = struct {
     allocator: std.mem.Allocator,
@@ -10,6 +12,8 @@ pub const World = struct {
     player: Player,
 
     pub fn init(allocator: std.mem.Allocator, console: Console) !World {
+        try console.clear();
+        try console.stdout.writeAll(startText);
         const raw_name = try console.getInput("Hello adventurer! Tell me your name so that I might properly address you: ", .{});
         const name = try allocator.dupe(u8, raw_name);
         const player: Player = .{ .name = name };
